@@ -37,6 +37,42 @@ public class ArticleController {
         return ResponseEntity.ok(article);
     }
 
+    @GetMapping("/search-title")
+    public ResponseEntity<List<Article>> getArticlesByTitle(@RequestParam String searchTerms) {
+        List<Article> articles = articleRepository.findByTitle(searchTerms);
+        if (articles.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("/search-content")
+    public ResponseEntity<List<Article>> getArticlesByContent(@RequestParam String searchContent) {
+        List<Article> articles = articleRepository.findByContent(searchContent);
+        if (articles.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("/search-created-at")
+    public ResponseEntity<List<Article>> getArticlesCreatedAfter(@RequestParam LocalDateTime searchCreatedAt) {
+        List<Article> articles = articleRepository.findByCreatedAtAfter(searchCreatedAt);
+        if (articles.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("search-last-five")
+    public ResponseEntity<List<Article>> getLastFiveArticles() {
+        List<Article> articles = articleRepository.findTop5ByOrderByCreatedAtDesc();
+        if (articles.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(articles);
+    }
+
     @PostMapping
     public ResponseEntity<Article> createArticle(@RequestBody Article article) {
         article.setCreatedAt(LocalDateTime.now());
