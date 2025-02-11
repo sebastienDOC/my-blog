@@ -1,44 +1,58 @@
 package org.wildcodeschool.myblog.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcodeschool.myblog.dto.AuthorDTO;
-import org.wildcodeschool.myblog.model.Author;
-import org.wildcodeschool.myblog.repository.AuthorRepository;
+import org.wildcodeschool.myblog.service.AuthorService;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/authors")
 public class AuthorController {
 
-    private final AuthorRepository authorRepository;
+    private final AuthorService authorService;
 
-    public AuthorController(AuthorRepository authorRepository) {
-        this.authorRepository = authorRepository;
+    public AuthorController(AuthorService authorService) {
+        this.authorService = authorService;
     }
 
     @GetMapping
     public ResponseEntity<List<AuthorDTO>> getAllAuthors() {
-        List<Author> authors = authorRepository.findAll();
-        List<AuthorDTO> authorDTOs = authors.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(authorDTOs);
+        List<AuthorDTO> authors = authorService.getAllAuthors();
+        if (authors.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(authors);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AuthorDTO> getAuthorById(@PathVariable Long id) {
+        Optional<AuthorDTO> author = authorService.getAuthorById(id);
+        return author.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<AuthorDTO> createAuthor(@RequestBody Author author) {
-        Author savedAuthor = authorRepository.save(author);
-        return ResponseEntity.status(201).body(convertToDTO(savedAuthor));
+    public ResponseEntity<AuthorDTO> createAuthor(@RequestBody AuthorDTO authorDTO) {
+        AuthorDTO savedAuthor = authorService.createAuthor(authorDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedAuthor);
     }
 
-    private AuthorDTO convertToDTO(Author author) {
-        AuthorDTO authorDTO = new AuthorDTO();
-        authorDTO.setId(author.getId());
-        authorDTO.setFirstName(author.getFirstname());
-        authorDTO.setLastName(author.getLastname());
-        return authorDTO;
+    @PutMapping("/{id}")
+    public ResponseEntity<AuthorDTO> updateAuthor(@PathVariable Long id, @RequestBody AuthorDTO authorDTO) {
+        Optional<AuthorDTO> updatedAuthor = authorService.updateAuthor(id, authorDTO);
+        return updatedAuthor.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
+        if (authorService.deleteAuthor(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
