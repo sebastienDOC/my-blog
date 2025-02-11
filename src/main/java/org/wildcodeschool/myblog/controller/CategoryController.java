@@ -1,13 +1,12 @@
 package org.wildcodeschool.myblog.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcodeschool.myblog.dto.CategoryDTO;
+import org.wildcodeschool.myblog.model.Category;
 import org.wildcodeschool.myblog.service.CategoryService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/categories")
@@ -30,29 +29,34 @@ public class CategoryController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
-        Optional<CategoryDTO> category = categoryService.getCategoryById(id);
-        return category.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        CategoryDTO category = categoryService.getCategoryById(id);
+        if (category == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(category);
     }
 
     @PostMapping
-    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
-        CategoryDTO savedCategory = categoryService.createCategory(categoryDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedCategory);
+    public ResponseEntity<CategoryDTO> createCategory(@RequestBody Category category) {
+        CategoryDTO savedCategory = categoryService.createCategory(category);
+        return ResponseEntity.status(201).body(savedCategory);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
-        Optional<CategoryDTO> updatedCategory = categoryService.updateCategory(id, categoryDTO);
-        return updatedCategory.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody Category categoryDetails) {
+        CategoryDTO updatedCategory = categoryService.updateCategory(id, categoryDetails);
+        if (updatedCategory == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(updatedCategory);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         if (categoryService.deleteCategory(id)) {
             return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
     }
 }

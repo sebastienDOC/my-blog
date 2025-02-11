@@ -1,13 +1,15 @@
 package org.wildcodeschool.myblog.service;
 
 import org.springframework.stereotype.Service;
+import org.wildcodeschool.myblog.dto.ArticleDTO;
 import org.wildcodeschool.myblog.dto.AuthorDTO;
+import org.wildcodeschool.myblog.exception.ResourceNotFoundException;
 import org.wildcodeschool.myblog.mapper.AuthorMapper;
+import org.wildcodeschool.myblog.model.Article;
 import org.wildcodeschool.myblog.model.Author;
 import org.wildcodeschool.myblog.repository.AuthorRepository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,37 +25,36 @@ public class AuthorService {
 
     public List<AuthorDTO> getAllAuthors() {
         List<Author> authors = authorRepository.findAll();
-        return authors.stream()
-                .map(authorMapper::convertToDTO)
-                .collect(Collectors.toList());
+        return authors.stream().map(authorMapper::convertToDTO).collect(Collectors.toList());
     }
 
-    public Optional<AuthorDTO> getAuthorById(Long id) {
-        return authorRepository.findById(id)
-                .map(authorMapper::convertToDTO);
+    public AuthorDTO getAuthorById(Long id) {
+        Author author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("L'auteur " + id + " n'a pas été trouvé"));
+        return authorMapper.convertToDTO(author);
     }
 
-    public AuthorDTO createAuthor(AuthorDTO authorDTO) {
-        Author author = authorMapper.convertToEntity(authorDTO);
+    public AuthorDTO createAuthor(Author author) {
         Author savedAuthor = authorRepository.save(author);
         return authorMapper.convertToDTO(savedAuthor);
     }
 
-    public Optional<AuthorDTO> updateAuthor(Long id, AuthorDTO authorDTO) {
-        return authorRepository.findById(id).map(existingAuthor -> {
-            existingAuthor.setFirstname(authorDTO.getFirstName());
-            existingAuthor.setLastname(authorDTO.getLastName());
-
-            Author updatedAuthor = authorRepository.save(existingAuthor);
-            return authorMapper.convertToDTO(updatedAuthor);
-        });
+    public AuthorDTO updateAuthor(Long id, Author authorDetails) {
+        Author author = authorRepository.findById(id).orElse(null);
+        if (author == null) {
+            return null;
+        }
+        author.setFirstname(authorDetails.getFirstname());
+        author.setLastname(authorDetails.getLastname());
+        Author updatedAuthor = authorRepository.save(author);
+        return authorMapper.convertToDTO(updatedAuthor);
     }
 
     public boolean deleteAuthor(Long id) {
-        if (authorRepository.existsById(id)) {
-            authorRepository.deleteById(id);
-            return true;
+        Author author = authorRepository.findById(id).orElse(null);
+        if (author == null) {
+            return false;
         }
-        return false;
+        authorRepository.delete(author);
+        return true;
     }
 }
