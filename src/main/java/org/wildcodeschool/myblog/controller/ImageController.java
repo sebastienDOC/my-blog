@@ -1,13 +1,12 @@
 package org.wildcodeschool.myblog.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcodeschool.myblog.dto.ImageDTO;
+import org.wildcodeschool.myblog.model.Image;
 import org.wildcodeschool.myblog.service.ImageService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/images")
@@ -30,29 +29,34 @@ public class ImageController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ImageDTO> getImageById(@PathVariable Long id) {
-        Optional<ImageDTO> image = imageService.getImageById(id);
-        return image.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        ImageDTO image = imageService.getImageById(id);
+        if (image == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(image);
     }
 
     @PostMapping
-    public ResponseEntity<ImageDTO> createImage(@RequestBody ImageDTO imageDTO) {
-        ImageDTO savedImage = imageService.createImage(imageDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedImage);
+    public ResponseEntity<ImageDTO> createImage(@RequestBody Image image) {
+        ImageDTO savedImage = imageService.createImage(image);
+        return ResponseEntity.status(201).body(savedImage);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ImageDTO> updateImage(@PathVariable Long id, @RequestBody ImageDTO imageDTO) {
-        Optional<ImageDTO> updatedImage = imageService.updateImage(id, imageDTO);
-        return updatedImage.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ImageDTO> updateImage(@PathVariable Long id, @RequestBody Image imageDetails) {
+        ImageDTO updatedImage = imageService.updateImage(id, imageDetails);
+        if (updatedImage == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(updatedImage);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteImage(@PathVariable Long id) {
         if (imageService.deleteImage(id)) {
             return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
     }
 }
