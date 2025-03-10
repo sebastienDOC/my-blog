@@ -6,6 +6,8 @@ import org.wildcodeschool.myblog.exception.ResourceNotFoundException;
 import org.wildcodeschool.myblog.mapper.ArticleMapper;
 import org.wildcodeschool.myblog.model.*;
 import org.wildcodeschool.myblog.repository.*;
+import org.wildcodeschool.myblog.dto.ArticleCreateDTO;
+
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,7 +49,8 @@ public class ArticleService {
         return articleMapper.convertToDTO(article);
     }
 
-    public ArticleDTO createArticle(Article article) {
+    public ArticleDTO createArticle(ArticleCreateDTO articleCreateDTO) {
+        Article article = articleMapper.convertToEntity(articleCreateDTO);
         article.setCreatedAt(LocalDateTime.now());
         article.setUpdatedAt(LocalDateTime.now());
 
